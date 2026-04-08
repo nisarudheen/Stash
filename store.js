@@ -10,19 +10,47 @@ const DEFAULT_DATA = { income: [], expenses: [], tasks: [], goals: [], credits: 
 let _store = structuredClone(DEFAULT_DATA);
 const _listeners = new Set();
 
+/**
+ * fetch with timeout + one retry — mirrors the same helper in auth.js.
+ * Render.com free-tier servers sleep after inactivity and the OPTIONS
+ * preflight can fail if the server isn't awake yet.
+ */
+async function fetchWithRetry(url, options, timeoutMs = 35000, retries = 1) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 async function api(path, method = 'GET', body = null) {
   const token = auth.getToken();
   if (!token) return { error: 'No token' };
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: body ? JSON.stringify(body) : null
-  });
-  return res.json();
+  try {
+    const res = await fetchWithRetry(`${API_BASE}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: body ? JSON.stringify(body) : null
+    });
+    return res.json();
+  } catch {
+    return { error: 'Server is unreachable. It may be waking up — please try again in a moment.' };
+  }
 }
 
 export const store = {

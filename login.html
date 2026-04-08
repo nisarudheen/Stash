@@ -847,9 +847,16 @@
             const btn = document.getElementById(btnId);
             if (loading) {
                 btn._origHTML = btn.innerHTML;
-                btn.innerHTML = '<div class="spinner"></div> Please wait…';
+                btn.innerHTML = '<div class="spinner"></div> Connecting…';
                 btn.disabled = true;
+                // After 8 s, hint that the server is cold-starting
+                btn._wakeTimer = setTimeout(() => {
+                    if (btn.disabled) {
+                        btn.innerHTML = '<div class="spinner"></div> Waking up server — please wait…';
+                    }
+                }, 8000);
             } else {
+                clearTimeout(btn._wakeTimer);
                 btn.innerHTML = btn._origHTML || btn.innerHTML;
                 btn.disabled = false;
             }

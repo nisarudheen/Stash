@@ -11,6 +11,31 @@ export const API_BASE = 'https://stash-api-backend.onrender.com/api';
 const TOKEN_KEY = 'stash_token';
 const USER_KEY = 'stash_user';
 
+/**
+ * fetch with a timeout + one retry.
+ * Render.com free-tier servers sleep after inactivity and can take
+ * 30-90 s to cold-start, so we give each attempt 35 s before we retry.
+ */
+async function fetchWithRetry(url, options, timeoutMs = 35000, retries = 1) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timer);
+            return res;
+        } catch (err) {
+            clearTimeout(timer);
+            if (attempt < retries) {
+                // Brief pause before retry
+                await new Promise(r => setTimeout(r, 1500));
+                continue;
+            }
+            throw err;
+        }
+    }
+}
+
 export const auth = {
     currentUser() {
         try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
@@ -26,7 +51,7 @@ export const auth = {
 
     async register({ firstName, lastName, email, password, currency, occupation }) {
         try {
-            const res = await fetch(`${API_BASE}/auth/register`, {
+            const res = await fetchWithRetry(`${API_BASE}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ firstName, lastName, email, password, currency, occupation })
@@ -36,13 +61,13 @@ export const auth = {
             this._save(data.token, data.user);
             return { ok: true, user: data.user };
         } catch {
-            return { ok: false, error: 'Cannot reach server. Check your internet connection.' };
+            return { ok: false, error: 'Server is waking up — this can take up to a minute on first use. Please try again in a moment.' };
         }
     },
 
     async login({ email, password }) {
         try {
-            const res = await fetch(`${API_BASE}/auth/login`, {
+            const res = await fetchWithRetry(`${API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -52,7 +77,7 @@ export const auth = {
             this._save(data.token, data.user);
             return { ok: true, user: data.user };
         } catch {
-            return { ok: false, error: 'Cannot reach server. Check your internet connection.' };
+            return { ok: false, error: 'Server is waking up — this can take up to a minute on first use. Please try again in a moment.' };
         }
     },
 

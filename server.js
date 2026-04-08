@@ -105,11 +105,30 @@ function getNextDate(dateStr, period) {
 }
 
 /* ─── Middleware ─── */
+
+// Allowed origins — add any new deployment URLs here
+const ALLOWED_ORIGINS = [
+    'https://nisarudheen.github.io',  // GitHub Pages (production)
+    'http://localhost:3000',
+    'http://localhost:5173',           // Vite dev server
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5500',          // VS Code Live Server
+    'http://localhost:5500'
+];
+
 const corsOptions = {
-    origin: '*',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, origin);   // echo back the exact origin (required for Authorization headers)
+        }
+        return callback(new Error(`CORS: origin '${origin}' not allowed`), false);
+    },
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    optionsSuccessStatus: 200   // legacy browser compat
+    credentials: true,             // needed when Authorization header is sent
+    optionsSuccessStatus: 200      // legacy browser compat
 };
 
 app.use(cors(corsOptions));
