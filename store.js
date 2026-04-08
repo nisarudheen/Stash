@@ -1,69 +1,71 @@
 /**
- * THE OBSIDIAN LEDGER - Data Store (API Version)
- * Communicates with PostgreSQL backend.
+ * STASH — Local Data Store (browser localStorage)
+ * No backend required — works on GitHub Pages.
  */
 
 import { auth } from './auth.js';
 
-// ─── Set in finance.html / login.html via window.STASH_API_URL ───────────────
-const API_BASE = window.STASH_API_URL || '/api';
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─── Helpers ─── */
+function storeKey() {
+  const user = auth.currentUser();
+  return 'stash_data_' + (user?.id || 'guest');
+}
 
-/* ─── Task Helpers ─── */
+function load() {
+  try {
+    const raw = localStorage.getItem(storeKey());
+    return raw ? JSON.parse(raw) : structuredClone(DEFAULT_DATA);
+  } catch { return structuredClone(DEFAULT_DATA); }
+}
+
+function save(data) {
+  localStorage.setItem(storeKey(), JSON.stringify(data));
+  _store = data;
+  _emit();
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+/* ─── Task date helpers ─── */
 export function getWeekLabel(date) {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = d.getDate() - day; // Back to Sunday
-  const sunday = new Date(d.setDate(diff));
-  return 'Week of ' + sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const sun = new Date(d.setDate(d.getDate() - day));
+  return 'Week of ' + sun.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function getMonthLabel(date) {
   return new Date(date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+function getNextDate(dateStr, period) {
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  const next = new Date(y, mo - 1, d, 12);
+  if (period === 'daily') next.setDate(next.getDate() + 1);
+  if (period === 'weekly') next.setDate(next.getDate() + 7);
+  if (period === 'monthly') next.setMonth(next.getMonth() + 1);
+  return next;
+}
+
+/* ─── Default state ─── */
 const DEFAULT_DATA = {
-  income: [],
-  expenses: [],
-  tasks: [],
-  goals: [],
-  credits: []
+  income: [], expenses: [], tasks: [], goals: [], credits: []
 };
 
 let _store = structuredClone(DEFAULT_DATA);
 const _listeners = new Set();
 
-async function api(path, method = 'GET', body = null) {
-  const token = auth.getToken();
-  if (!token) return { error: 'No token' };
+function _emit() { _listeners.forEach(fn => fn(_store)); }
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  };
-
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : null
-    });
-    return await res.json();
-  } catch (err) {
-    console.error(`API ${method} ${path} failed:`, err);
-    return { error: 'Network error' };
-  }
-}
-
+/* ─── Store ─── */
 export const store = {
   get() { return _store; },
 
   async reload() {
-    const data = await api('/data');
-    if (!data.error) {
-      _store = data;
-      this._emit();
-    }
+    _store = load();
+    _emit();
   },
 
   subscribe(fn) {
@@ -71,107 +73,143 @@ export const store = {
     return () => _listeners.delete(fn);
   },
 
-  _emit() {
-    _listeners.forEach(fn => fn(_store));
-  },
-
   /* ── INCOME ── */
   async addIncome({ type, amount, date, note }) {
-    const res = await api('/income', 'POST', { type, amount, date, note });
-    if (!res.error) await this.reload();
+    const data = load();
+    data.income.unshift({ id: uid(), type, amount: parseFloat(amount), date, note });
+    save(data);
   },
 
   async deleteIncome(id) {
-    const res = await api(`/income/${id}`, 'DELETE');
-    if (!res.error) await this.reload();
+    const data = load();
+    data.income = data.income.filter(r => r.id !== id);
+    save(data);
   },
 
   /* ── EXPENSES ── */
   async addExpense({ type, amount, date, note }) {
-    const res = await api('/expenses', 'POST', { type, amount, date, note });
-    if (!res.error) await this.reload();
+    const data = load();
+    data.expenses.unshift({ id: uid(), type, amount: parseFloat(amount), date, note });
+    save(data);
   },
 
   async deleteExpense(id) {
-    const res = await api(`/expenses/${id}`, 'DELETE');
-    if (!res.error) await this.reload();
+    const data = load();
+    data.expenses = data.expenses.filter(r => r.id !== id);
+    save(data);
   },
 
   /* ── TASKS ── */
   async addTask({ title, period, note, date: customDate }) {
-    const date = customDate ? new Date(customDate) : new Date();
-    const isoDate = date.toISOString().slice(0, 10);
-    const weekLabel = getWeekLabel(date);
-    const monthLabel = getMonthLabel(date);
-
-    const res = await api('/tasks', 'POST', {
-      title, period, note,
-      date: isoDate, weekLabel, monthLabel
+    const d = customDate ? new Date(customDate) : new Date();
+    const isoDate = d.toISOString().slice(0, 10);
+    const data = load();
+    data.tasks.push({
+      id: uid(), title, period, note,
+      date: isoDate, done: false,
+      weekLabel: getWeekLabel(d), monthLabel: getMonthLabel(d)
     });
-    if (!res.error) await this.reload();
+    save(data);
   },
 
   async toggleTask(id) {
-    const res = await api(`/tasks/${id}/toggle`, 'PATCH');
-    if (!res.error) await this.reload();
+    const data = load();
+    const t = data.tasks.find(x => x.id === id);
+    if (t) t.done = !t.done;
+    save(data);
   },
 
   async rolloverTask(id) {
-    const res = await api(`/tasks/${id}/rollover`, 'PATCH');
-    if (!res.error) await this.reload();
+    const data = load();
+    const t = data.tasks.find(x => x.id === id);
+    if (t) {
+      const next = getNextDate(t.date, t.period);
+      t.date = next.toISOString().slice(0, 10);
+      t.done = false;
+      t.weekLabel = getWeekLabel(next);
+      t.monthLabel = getMonthLabel(next);
+    }
+    save(data);
   },
 
   async rolloverAllTasks(period) {
-    const res = await api('/tasks/rollover-all', 'POST', { period });
-    if (!res.error) await this.reload();
+    const data = load();
+    data.tasks.filter(t => t.period === period).forEach(t => {
+      const next = getNextDate(t.date, t.period);
+      t.date = next.toISOString().slice(0, 10);
+      t.done = false;
+      t.weekLabel = getWeekLabel(next);
+      t.monthLabel = getMonthLabel(next);
+    });
+    save(data);
   },
 
   async deleteTask(id) {
-    const res = await api(`/tasks/${id}`, 'DELETE');
-    if (!res.error) await this.reload();
+    const data = load();
+    data.tasks = data.tasks.filter(r => r.id !== id);
+    save(data);
   },
 
   /* ── GOALS ── */
   async addGoal({ title, target, targetDate, unit, currentValue }) {
-    const res = await api('/goals', 'POST', { title, target, targetDate, unit, currentValue });
-    if (!res.error) await this.reload();
+    const data = load();
+    data.goals.push({
+      id: uid(), title,
+      target: parseFloat(target),
+      currentValue: parseFloat(currentValue || 0),
+      targetDate: targetDate || null,
+      unit: unit || '%',
+      done: false
+    });
+    save(data);
   },
 
   async updateGoalProgress(id, value) {
-    const res = await api(`/goals/${id}/progress`, 'PATCH', { currentValue: value });
-    if (!res.error) await this.reload();
+    const data = load();
+    const g = data.goals.find(x => x.id === id);
+    if (g) { g.currentValue = parseFloat(value); g.done = g.currentValue >= g.target; }
+    save(data);
   },
 
   async toggleGoal(id) {
-    const res = await api(`/goals/${id}/toggle`, 'PATCH');
-    if (!res.error) await this.reload();
+    const data = load();
+    const g = data.goals.find(x => x.id === id);
+    if (g) g.done = !g.done;
+    save(data);
   },
 
   async deleteGoal(id) {
-    const res = await api(`/goals/${id}`, 'DELETE');
-    if (!res.error) await this.reload();
+    const data = load();
+    data.goals = data.goals.filter(r => r.id !== id);
+    save(data);
   },
 
   /* ── CREDITS ── */
   async addCredit({ person, amount, note, date, type }) {
-    const res = await api('/credits', 'POST', { person, amount, note, date, type });
-    if (!res.error) await this.reload();
+    const data = load();
+    data.credits.unshift({
+      id: uid(), person, amount: parseFloat(amount), note, date,
+      type: type || 'lent', repaid: false
+    });
+    save(data);
   },
 
   async toggleCredit(id) {
-    const res = await api(`/credits/${id}/toggle`, 'PATCH');
-    if (!res.error) await this.reload();
+    const data = load();
+    const c = data.credits.find(x => x.id === id);
+    if (c) c.repaid = !c.repaid;
+    save(data);
   },
 
   async deleteCredit(id) {
-    const res = await api(`/credits/${id}`, 'DELETE');
-    if (!res.error) await this.reload();
+    const data = load();
+    data.credits = data.credits.filter(r => r.id !== id);
+    save(data);
   }
 };
 
-/* ─── Date Helpers ─── */
+/* ─── Exported helpers (unchanged from previous version) ─── */
 
-/** Returns 'YYYY-MM-DD' in LOCAL timezone (not UTC) */
 function localDateStr(date) {
   const d = date instanceof Date ? date : new Date(date);
   const y = d.getFullYear();
@@ -180,19 +218,11 @@ function localDateStr(date) {
   return `${y}-${m}-${day}`;
 }
 
-/**
- * Extract a local YYYY-MM-DD string from a value that may be:
- *   - a YYYY-MM-DD string (from pg DATE column)
- *   - a JS Date object (from pg TIMESTAMPTZ column)
- *   - an ISO timestamp string 'YYYY-MM-DDTHH:...' 
- */
 function toLocalDs(val) {
   if (!val) return null;
   if (val instanceof Date) return localDateStr(val);
   if (typeof val === 'string') {
-    // Strip time portion to avoid UTC midnight parse issues
     const datePart = val.includes('T') ? val.split('T')[0] : val;
-    // Re-parse as local noon to avoid any midnight-UTC edge cases
     const [y, mo, d] = datePart.split('-').map(Number);
     return localDateStr(new Date(y, mo - 1, d, 12, 0, 0));
   }
@@ -201,60 +231,48 @@ function toLocalDs(val) {
 
 export function filterByPeriod(records, period, dateField = 'date') {
   const now = new Date();
-  const todayLocal = localDateStr(now); // e.g. '2026-04-03' in IST
+  const todayLocal = localDateStr(now);
 
   return records.filter(r => {
-    // Get the date value; fall back to created_at if date field missing
     const raw = r[dateField] || r.created_at;
     const ds = toLocalDs(raw) || todayLocal;
-    // Build a local noon Date for range comparisons (avoids midnight UTC pitfalls)
     const [y, mo, d] = ds.split('-').map(Number);
     const localNoon = new Date(y, mo - 1, d, 12, 0, 0);
 
     switch (period) {
-      case 'today':
-        return ds === todayLocal;
+      case 'today': return ds === todayLocal;
       case 'tomorrow': {
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        return ds === localDateStr(tomorrow);
+        const t = new Date(now); t.setDate(t.getDate() + 1);
+        return ds === localDateStr(t);
       }
       case 'week': {
-        const weekStart = startOfWeek(now);
-        const weekEnd = new Date(now);
-        weekEnd.setHours(23, 59, 59, 999);
-        return localNoon >= weekStart && localNoon <= weekEnd;
+        const ws = startOfWeek(now);
+        const we = new Date(now); we.setHours(23, 59, 59, 999);
+        return localNoon >= ws && localNoon <= we;
       }
       case 'next-week': {
-        const nextWeekStart = startOfWeek(now);
-        nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-        const nextWeekEnd = new Date(nextWeekStart);
-        nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
-        nextWeekEnd.setHours(23, 59, 59, 999);
-        return localNoon >= nextWeekStart && localNoon <= nextWeekEnd;
+        const nws = startOfWeek(now); nws.setDate(nws.getDate() + 7);
+        const nwe = new Date(nws); nwe.setDate(nwe.getDate() + 6); nwe.setHours(23, 59, 59, 999);
+        return localNoon >= nws && localNoon <= nwe;
       }
-      case 'month':
-        return y === now.getFullYear() && (mo - 1) === now.getMonth();
+      case 'month': return y === now.getFullYear() && (mo - 1) === now.getMonth();
       case 'next-month': {
-        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        return y === nextMonth.getFullYear() && (mo - 1) === nextMonth.getMonth();
+        const nm = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        return y === nm.getFullYear() && (mo - 1) === nm.getMonth();
       }
       case 'quarter': {
         const q = Math.floor(now.getMonth() / 3);
         return y === now.getFullYear() && Math.floor((mo - 1) / 3) === q;
       }
-      case 'year':
-        return y === now.getFullYear();
-      default:
-        return true;
+      case 'year': return y === now.getFullYear();
+      default: return true;
     }
   });
 }
 
 function startOfWeek(date) {
   const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day);
+  d.setDate(d.getDate() - d.getDay());
   d.setHours(0, 0, 0, 0);
   return d;
 }
@@ -281,16 +299,9 @@ export function fmtDate(dateStr) {
 }
 
 export function computeTaskStats(tasks, periodFilter) {
-  const filtered = tasks.filter(t => {
-    if (periodFilter === 'daily') return t.period === 'daily';
-    if (periodFilter === 'weekly') return t.period === 'weekly';
-    if (periodFilter === 'monthly') return t.period === 'monthly';
-    return true;
-  });
+  const filtered = tasks.filter(t => t.period === periodFilter);
   const total = filtered.length;
   const done = filtered.filter(t => t.done).length;
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   return { total, done, pct };
 }
-
-

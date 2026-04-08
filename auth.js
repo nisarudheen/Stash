@@ -1,23 +1,38 @@
 /**
- * THE OBSIDIAN LEDGER — Auth Module
- * Communicates with deployed backend.
+ * STASH — Local Auth (browser localStorage only)
+ * No backend required — works on GitHub Pages.
  */
 
-// ─── CHANGE THIS TO YOUR RENDER URL ONCE DEPLOYED ───────────────────────────
-// Example: 'https://stash-api.onrender.com/api'
-// Leave as '/api' if serving from same origin (local dev with server.js)
-const API_BASE = window.STASH_API_URL || '/api';
-// ─────────────────────────────────────────────────────────────────────────────
+const TOKEN_KEY = 'stash_token';
+const USER_KEY = 'stash_user';
+const USERS_KEY = 'stash_users_db';
 
-const TOKEN_KEY = 'obsidian_token';
-const USER_KEY = 'obsidian_user';
+/* helpers */
+function getUsers() {
+    try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch { return {}; }
+}
+function saveUsers(users) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+/** super-simple hashing (bcrypt-like feel) — good enough for local storage */
+async function hashPassword(pw) {
+    const enc = new TextEncoder();
+    const buf = await crypto.subtle.digest('SHA-256', enc.encode('stash_salt_:' + pw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyPassword(pw, hash) {
+    return (await hashPassword(pw)) === hash;
+}
+
+function makeToken(userId) {
+    return btoa(JSON.stringify({ userId, ts: Date.now() }));
+}
 
 export const auth = {
-    /** Returns current logged in user from localStorage cache */
     currentUser() {
-        try {
-            return JSON.parse(localStorage.getItem(USER_KEY));
-        } catch { return null; }
+        try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
     },
 
     getToken() {
@@ -28,54 +43,50 @@ export const auth = {
         return !!this.getToken();
     },
 
-    async register(details) {
-        try {
-            const res = await fetch(`${API_BASE}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(details)
-            });
-            const data = await res.json();
-            if (!res.ok) return { ok: false, error: data.error };
+    async register({ firstName, lastName, email, password, currency, occupation }) {
+        const users = getUsers();
+        const key = email.toLowerCase().trim();
 
-            this._save(data.token, data.user);
-            return { ok: true, user: data.user };
-        } catch (err) {
-            return { ok: false, error: 'Could not connect to server.' };
+        if (users[key]) {
+            return { ok: false, error: 'An account with this email already exists.' };
         }
+
+        const passwordHash = await hashPassword(password);
+        const id = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+
+        const user = { id, firstName, lastName, email: key, currency: currency || 'USD', occupation: occupation || '' };
+        users[key] = { ...user, passwordHash };
+        saveUsers(users);
+
+        const token = makeToken(id);
+        this._save(token, user);
+        return { ok: true, user };
     },
 
     async login({ email, password }) {
-        try {
-            const res = await fetch(`${API_BASE}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            if (!res.ok) return { ok: false, error: data.error };
+        const users = getUsers();
+        const key = email.toLowerCase().trim();
+        const stored = users[key];
 
-            this._save(data.token, data.user);
-            return { ok: true, user: data.user };
-        } catch (err) {
-            return { ok: false, error: 'Could not connect to server.' };
-        }
+        if (!stored) return { ok: false, error: 'Invalid email or password.' };
+
+        const valid = await verifyPassword(password, stored.passwordHash);
+        if (!valid) return { ok: false, error: 'Invalid email or password.' };
+
+        const { passwordHash, ...user } = stored;
+        const token = makeToken(user.id);
+        this._save(token, user);
+        return { ok: true, user };
     },
 
     logout() {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('obsidian_data_')) keysToRemove.push(key);
-        }
-        keysToRemove.forEach(k => localStorage.removeItem(k));
     },
 
     _save(token, user) {
-        const fn = user.firstName || user.first_name || '';
-        const ln = user.lastName || user.last_name || '';
+        const fn = user.firstName || '';
+        const ln = user.lastName || '';
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify({
             ...user,
