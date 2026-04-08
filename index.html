@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>STASH</title>
+    <meta name="description" content="Private finance and productivity vault" />
+    <style>
+        body {
+            margin: 0;
+            background: #0a0a0c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .logo {
+            font-family: -apple-system, sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            color: #f4f4f5;
+            letter-spacing: -0.04em;
+            animation: pulse 1.4s ease infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo">STASH</div>
+    <script type="module">
+        import { auth } from './auth.js';
+        if (auth.isLoggedIn()) {
+            window.location.replace('finance.html');
+        } else {
+            window.location.replace('login.html');
+        }
+    </script>
+</body>
+
+</html>

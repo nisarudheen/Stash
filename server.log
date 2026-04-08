@@ -1,0 +1,139 @@
+Server running at http://localhost:3000
+2026-04-06T03:23:59.877Z | POST /api/auth/login
+Body: { email: 'nizar.ledger@test.com', password: '***' }
+2026-04-06T03:27:15.067Z | POST /api/auth/login
+Body: { email: 'nizar.ledger@test.com', password: '***' }
+2026-04-06T03:34:04.295Z | POST /api/auth/login
+Body: { email: 'nizar.ledger@test.com', password: '***' }
+2026-04-06T03:34:18.140Z | POST /api/auth/register
+Body: {
+  firstName: 'Test',
+  lastName: 'User',
+  email: 'test_user_final@example.com',
+  password: '***'
+}
+2026-04-06T03:34:18.387Z | POST /api/auth/login
+Body: { email: 'test_user_final@example.com', password: '***' }
+2026-04-06T03:37:16.013Z | GET /api/data
+2026-04-06T03:41:44.614Z | POST /api/credits
+Body: {
+  person: 'Final Test Ali',
+  amount: 1200,
+  type: 'lent',
+  date: '2026-04-06',
+  note: 'Verification test'
+}
+2026-04-06T03:42:19.117Z | POST /api/auth/login
+Body: { email: 'test_user_final@example.com', password: '***' }
+2026-04-06T03:42:19.302Z | GET /api/data
+2026-04-06T03:43:48.856Z | POST /api/auth/login
+Body: {
+  email: 'postgres_v3@test.comtest_user_final@example.com',
+  password: '***'
+}
+2026-04-06T03:44:14.587Z | POST /api/auth/login
+Body: { email: 'test_user_final@example.com', password: '***' }
+2026-04-06T03:46:49.377Z | POST /api/auth/login
+Body: { email: 'test_user_final@example.com', password: '***' }
+2026-04-06T03:47:48.387Z | GET /api/data
+2026-04-06T03:49:56.123Z | POST /api/auth/login
+Body: { email: 'test_user_final@example.com', password: '***' }
+2026-04-06T03:50:08.900Z | GET /api/data
+2026-04-06T03:59:33.339Z | GET /api/data
+2026-04-06T04:00:10.120Z | POST /api/credits
+Body: {
+  person: 'anees',
+  amount: '1200',
+  note: 'wertyuio',
+  date: '2026-04-06',
+  type: 'lent'
+}
+2026-04-06T04:00:10.159Z | GET /api/data
+2026-04-06T04:00:50.593Z | POST /api/credits
+Body: {
+  person: '3456789',
+  amount: '30',
+  note: '',
+  date: '2026-04-06',
+  type: 'lent'
+}
+2026-04-06T04:00:50.634Z | GET /api/data
+2026-04-06T04:02:09.133Z | PATCH /api/credits/3481570b-3506-4d33-a423-6ecaf51deed3/toggle
+Body: {}
+2026-04-06T04:02:09.168Z | GET /api/data
+2026-04-06T04:02:10.492Z | PATCH /api/credits/c75e774e-9014-439f-bb1a-5f0f668f530e/toggle
+Body: {}
+2026-04-06T04:02:10.509Z | GET /api/data
+2026-04-06T04:08:23.229Z | GET /api/data
+2026-04-06T04:15:12.825Z | POST /api/auth/login
+Body: { email: 'hanatest@gmail.com', password: '***' }
+2026-04-06T04:15:13.291Z | GET /api/data
+2026-04-06T04:24:44.468Z | POST /api/auth/register
+Body: {
+  firstName: 'midhexe',
+  lastName: 'vault',
+  email: 'midhexe@gmail.com',
+  password: '***',
+  currency: 'USD',
+  occupation: 'Software Development'
+}
+2026-04-06T04:24:44.826Z | GET /api/data
+2026-04-06T04:42:52.760Z | POST /api/auth/login
+Body: { email: 'test_user_final@example.com', password: '***' }
+2026-04-06T05:05:19.833Z | GET /api/data
+2026-04-06T05:18:06.952Z | GET /
+2026-04-06T05:18:07.108Z | GET /
+2026-04-06T05:51:15.485Z | POST /api/auth/login
+Body: { email: 'hanatest@gmail.com', password: '***' }
+2026-04-06T05:51:15.843Z | GET /api/data
+2026-04-06T06:25:26.979Z | GET /api/data
+2026-04-06T06:27:40.376Z | PATCH /api/tasks/ee4e843d-4e9b-4676-914a-05503129f547/toggle
+Body: {}
+2026-04-06T06:27:40.426Z | GET /api/data
+2026-04-06T06:27:41.247Z | PATCH /api/tasks/ee4e843d-4e9b-4676-914a-05503129f547/toggle
+Body: {}
+2026-04-06T06:27:41.263Z | GET /api/data
+2026-04-06T06:27:42.667Z | PATCH /api/tasks/9f179fbe-908d-4a5e-b872-bc088f89469d/toggle
+Body: {}
+2026-04-06T06:27:42.687Z | GET /api/data
+2026-04-06T06:27:44.460Z | PATCH /api/tasks/88441943-25dd-4026-9fa2-37fb2b6c4f86/toggle
+Body: {}
+2026-04-06T06:27:44.480Z | GET /api/data
+2026-04-06T06:27:46.167Z | PATCH /api/tasks/88441943-25dd-4026-9fa2-37fb2b6c4f86/toggle
+Body: {}
+2026-04-06T06:27:46.194Z | GET /api/data
+2026-04-06T06:27:47.935Z | PATCH /api/tasks/9f179fbe-908d-4a5e-b872-bc088f89469d/toggle
+Body: {}
+2026-04-06T06:27:47.952Z | GET /api/data
+2026-04-06T06:27:49.318Z | PATCH /api/tasks/9f179fbe-908d-4a5e-b872-bc088f89469d/toggle
+Body: {}
+2026-04-06T06:27:49.333Z | GET /api/data
+2026-04-06T06:27:54.835Z | PATCH /api/tasks/9f179fbe-908d-4a5e-b872-bc088f89469d/toggle
+Body: {}
+2026-04-06T06:27:54.855Z | GET /api/data
+2026-04-06T06:27:57.152Z | PATCH /api/tasks/ee4e843d-4e9b-4676-914a-05503129f547/toggle
+Body: {}
+2026-04-06T06:27:57.211Z | GET /api/data
+2026-04-06T06:28:00.487Z | PATCH /api/tasks/9f179fbe-908d-4a5e-b872-bc088f89469d/toggle
+Body: {}
+2026-04-06T06:28:00.507Z | GET /api/data
+2026-04-06T06:28:01.239Z | PATCH /api/tasks/ee4e843d-4e9b-4676-914a-05503129f547/toggle
+Body: {}
+2026-04-06T06:28:01.254Z | GET /api/data
+2026-04-06T06:31:41.957Z | POST /api/auth/login
+Body: { email: 'midh.exe@gmail.com', password: '***' }
+2026-04-06T06:31:45.418Z | POST /api/auth/login
+Body: { email: 'nizar@test.com', password: '***' }
+2026-04-06T06:31:48.319Z | POST /api/auth/login
+Body: { email: 'postgres_v3@test.com', password: '***' }
+2026-04-06T06:33:35.394Z | GET /api/data
+2026-04-06T06:38:54.958Z | POST /api/auth/login
+Body: { email: 'hanatest@gmail.com', password: '***' }
+2026-04-06T06:38:55.538Z | GET /api/data
+2026-04-06T07:02:55.666Z | GET /api/data
+2026-04-06T07:06:32.959Z | POST /api/auth/login
+Body: { email: 'hanatest@gmail.com', password: '***' }
+2026-04-06T07:06:33.342Z | GET /api/data
+2026-04-06T07:07:57.760Z | POST /api/auth/login
+Body: { email: 'hanatest@gmail.com', password: '***' }
+2026-04-06T07:07:58.276Z | GET /api/data

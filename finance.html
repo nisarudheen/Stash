@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>STASH — Personal Finance & Productivity</title>
+    <meta name="description"
+        content="A private vault for tracking income, expenses, goals, and tasks with beautiful dashboards." />
+    <!-- Auth guard: runs before render -->
+    <script type="module">
+        import { auth } from './auth.js';
+        if (!auth.isLoggedIn()) window.location.replace('login.html');
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════════
+     APP SHELL
+═════════════════════════════════════════ -->
+    <div class="app-shell">
+
+        <!-- ─── SIDEBAR ─── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <h1>STASH</h1>
+                <p>Private Vault</p>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebar-nav">
+                <div class="nav-item active" data-page="finance" id="nav-finance">
+                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                    Finance
+                </div>
+                <div class="nav-item" data-page="analytics" id="nav-analytics">
+                    <span class="material-symbols-outlined">insights</span>
+                    Analytics
+                </div>
+                <div class="nav-item" data-page="goals" id="nav-goals">
+                    <span class="material-symbols-outlined">track_changes</span>
+                    Goals
+                </div>
+                <div class="nav-item" data-page="tasks" id="nav-tasks">
+                    <span class="material-symbols-outlined">checklist</span>
+                    Tasks
+                </div>
+                <div class="nav-item" data-page="achievements" id="nav-achievements">
+                    <span class="material-symbols-outlined">military_tech</span>
+                    Achievements
+                </div>
+                <div class="nav-item" data-page="credits" id="nav-credits">
+                    <span class="material-symbols-outlined">handshake</span>
+                    Credits
+                </div>
+                <div class="nav-item" data-page="entry" id="nav-entry">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    New Entry
+                </div>
+            </nav>
+
+            <div class="sidebar-footer" style="flex-direction:column;gap:0;padding-left:0;">
+                <div style="display:flex;align-items:center;gap:10px;padding:0 8px;width:100%;">
+                    <div class="sidebar-footer-avatar" id="user-avatar">?</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="sidebar-footer-name" id="user-name">Loading…</div>
+                        <div class="sidebar-footer-role" id="user-role">Member</div>
+                    </div>
+                </div>
+                <button onclick="doLogout()"
+                    style="margin-top:10px;width:100%;padding:8px;border-radius:8px;border:none;background:rgba(255,84,71,0.08);color:#ffb4aa;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;"
+                    onmouseover="this.style.background='rgba(255,84,71,0.16)'"
+                    onmouseout="this.style.background='rgba(255,84,71,0.08)'">
+                    <span class="material-symbols-outlined" style="font-size:15px;">logout</span>
+                    Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- ─── MAIN AREA ─── -->
+        <div class="main-area">
+
+            <!-- ─── TOPBAR ─── -->
+            <header class="topbar">
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <span class="topbar-title">STASH</span>
+                </div>
+
+                <div class="topbar-center">
+                    <div class="period-filter" id="period-filter">
+                        <button class="period-btn active" data-period="today">Today</button>
+                        <button class="period-btn" data-period="tomorrow">Tomorrow</button>
+                        <button class="period-btn" data-period="week">This Week</button>
+                        <button class="period-btn" data-period="next-week">Next Week</button>
+                        <button class="period-btn" data-period="month">This Month</button>
+                        <button class="period-btn" data-period="next-month">Next Month</button>
+                        <button class="period-btn" data-period="quarter">This Quarter</button>
+                        <button class="period-btn" data-period="year">This Year</button>
+                    </div>
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="search-wrap">
+                        <span class="material-symbols-outlined">search</span>
+                        <input class="search-input" type="text" id="global-search" placeholder="Search vault…" />
+                    </div>
+                    <button class="icon-btn" title="Notifications">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <button class="icon-btn" title="Settings">
+                        <span class="material-symbols-outlined">settings</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ─── PAGE CONTENT ─── -->
+            <div class="content-area" id="content-area">
+
+                <!-- ════════════════════════════════
+           PAGE: FINANCE DASHBOARD
+      ═════════════════════════════════ -->
+                <div class="page active" id="page-finance">
+                    <!-- Hero Row -->
+                    <div class="overview-grid-hero">
+                        <!-- Net Position Card -->
+                        <div class="finance-hero card-gradient"
+                            style="background:var(--color-surface-container-low);border-radius:28px;padding:28px;">
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+                                <div>
+                                    <div
+                                        style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--color-on-surface-variant);margin-bottom:8px;">
+                                        Total Net Position</div>
+                                    <div class="finance-hero-value" id="net-position-val"
+                                        style="color:var(--color-on-surface);">$0.00</div>
+                                    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+                                        <span id="net-badge" class="badge badge-success" style="font-size:11px;">
+                                            <span class="material-symbols-outlined"
+                                                style="font-size:13px;">trending_up</span>
+                                            Calculated
+                                        </span>
+                                        <span style="font-size:11px;color:var(--color-on-surface-variant);">income −
+                                            expenses</span>
+                                    </div>
+                                </div>
+                                <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+                                    <svg style="width:100%;height:100%;transform:rotate(-90deg);" viewBox="0 0 80 80">
+                                        <circle cx="40" cy="40" r="32" fill="transparent"
+                                            stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                        <circle id="net-ring" cx="40" cy="40" r="32" fill="transparent"
+                                            stroke="var(--color-secondary)" stroke-width="6" stroke-dasharray="201"
+                                            stroke-dashoffset="201" stroke-linecap="round" />
+                                    </svg>
+                                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;"
+                                        id="net-ring-label">—</div>
+                                </div>
+                            </div>
+                            <!-- mini bars -->
+                            <div class="mini-bars" id="finance-mini-bars" style="height:64px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Income + Expense side cards -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <!-- Income Card -->
+                            <div class="card card-gradient" style="flex:1;border-radius:28px;">
+                                <div
+                                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                                    <div
+                                        style="width:44px;height:44px;border-radius:50%;background:rgba(71,226,102,0.1);display:flex;align-items:center;justify-content:center;color:var(--color-secondary);">
+                                        <span class="material-symbols-outlined" style="font-size:20px;">payments</span>
+                                    </div>
+                                    <span
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--color-secondary);">Income</span>
+                                </div>
+                                <div style="font-size:26px;font-weight:900;letter-spacing:-.04em;"
+                                    id="total-income-val">$0.00</div>
+                                <div class="progress-bar-wrap" style="margin-top:12px;">
+                                    <div class="progress-bar-fill progress-secondary" id="income-fill"
+                                        style="width:0%;"></div>
+                                </div>
+                                <div style="margin-top:6px;font-size:11px;color:var(--color-on-surface-variant);"
+                                    id="income-entries-label">0 entries</div>
+                            </div>
+
+                            <!-- Expense Card -->
+                            <div class="card" style="flex:1;border-radius:28px;">
+                                <div
+                                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                                    <div
+                                        style="width:44px;height:44px;border-radius:50%;background:rgba(255,84,71,0.1);display:flex;align-items:center;justify-content:center;color:var(--color-tertiary);">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size:20px;">shopping_cart</span>
+                                    </div>
+                                    <span
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--color-tertiary);">Expenses</span>
+                                </div>
+                                <div style="font-size:26px;font-weight:900;letter-spacing:-.04em;"
+                                    id="total-expense-val">$0.00</div>
+                                <div class="progress-bar-wrap" style="margin-top:12px;">
+                                    <div class="progress-bar-fill progress-tertiary" id="expense-fill"
+                                        style="width:0%;"></div>
+                                </div>
+                                <div style="margin-top:6px;font-size:11px;color:var(--color-on-surface-variant);"
+                                    id="expense-entries-label">0 entries</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Stats Row -->
+                    <div class="stats-grid" style="margin-bottom:20px;">
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Today Income</div>
+                                <div class="value" style="font-size:22px;" id="today-income-val">$0</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(71,226,102,0.3);">trending_up</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Today Expenses</div>
+                                <div class="value" style="font-size:22px;" id="today-expense-val">$0</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(255,84,71,0.3);">trending_down</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Tasks Done Today</div>
+                                <div class="value" style="font-size:22px;" id="tasks-done-val">0/0</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(170,199,255,0.3);">task_alt</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Goals Active</div>
+                                <div class="value" style="font-size:22px;" id="goals-active-val">0</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(170,199,255,0.2);">flag</span>
+                        </div>
+                    </div>
+
+                    <!-- Transactions -->
+                    <div class="section-header">
+                        <div class="section-title">Recent Transactions</div>
+                        <button class="section-action" onclick="window.navigate('analytics')">View Analytics →</button>
+                    </div>
+                    <div class="transaction-list" id="finance-tx-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- ════════════════════════════════
+           PAGE: ANALYTICS
+      ═════════════════════════════════ -->
+                <div class="page" id="page-analytics">
+                    <div class="page-header">
+                        <div>
+                            <div
+                                style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--color-primary-fixed-dim);margin-bottom:4px;">
+                                Performance Insight</div>
+                            <div class="page-title">Income vs Expenses</div>
+                        </div>
+                    </div>
+
+                    <!-- Donut + Core Metrics -->
+                    <div class="analytics-top-grid">
+                        <!-- Donut -->
+                        <div class="card"
+                            style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:280px;">
+                            <div class="donut-chart-container">
+                                <svg style="transform:rotate(-90deg);width:100%;height:100%;" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="40" fill="transparent"
+                                        stroke="var(--color-surface-container-lowest)" stroke-width="8" />
+                                    <circle id="donut-expense" cx="50" cy="50" r="40" fill="transparent"
+                                        stroke="var(--color-tertiary-container)" stroke-dasharray="251.2"
+                                        stroke-dashoffset="150" stroke-linecap="round" stroke-width="8" />
+                                    <circle id="donut-savings" cx="50" cy="50" r="40" fill="transparent"
+                                        stroke="var(--color-secondary)" stroke-dasharray="251.2" stroke-dashoffset="190"
+                                        stroke-linecap="round" stroke-width="8"
+                                        style="filter:drop-shadow(0 0 6px rgba(71,226,102,0.4));" />
+                                </svg>
+                                <div
+                                    style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+                                    <span
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--color-on-surface-variant);">Savings
+                                        Rate</span>
+                                    <span
+                                        style="font-size:36px;font-weight:900;letter-spacing:-.04em;color:var(--color-secondary);"
+                                        id="savings-rate-val">0%</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:20px;">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <div
+                                        style="width:10px;height:10px;border-radius:50%;background:var(--color-secondary);">
+                                    </div>
+                                    <span style="font-size:11px;color:var(--color-on-surface-variant);">Savings</span>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <div
+                                        style="width:10px;height:10px;border-radius:50%;background:var(--color-tertiary-container);">
+                                    </div>
+                                    <span style="font-size:11px;color:var(--color-on-surface-variant);">Expenses</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Core Metrics -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="card" style="border-radius:24px;">
+                                <div
+                                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                                    <span class="material-symbols-outlined"
+                                        style="padding:8px;background:rgba(71,226,102,0.1);border-radius:12px;color:var(--color-secondary);font-size:18px;">trending_up</span>
+                                </div>
+                                <div
+                                    style="font-size:12px;color:var(--color-on-surface-variant);margin-top:8px;font-weight:500;">
+                                    Total Income</div>
+                                <div style="font-size:26px;font-weight:900;letter-spacing:-.04em;"
+                                    id="analytics-income">$0.00</div>
+                            </div>
+                            <div class="card" style="border-radius:24px;">
+                                <div
+                                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                                    <span class="material-symbols-outlined"
+                                        style="padding:8px;background:rgba(255,84,71,0.1);border-radius:12px;color:var(--color-tertiary);font-size:18px;">trending_down</span>
+                                </div>
+                                <div
+                                    style="font-size:12px;color:var(--color-on-surface-variant);margin-top:8px;font-weight:500;">
+                                    Total Expenses</div>
+                                <div style="font-size:26px;font-weight:900;letter-spacing:-.04em;"
+                                    id="analytics-expense">$0.00</div>
+                            </div>
+                            <div class="card card-gradient"
+                                style="grid-column:1/-1;border-radius:24px;display:flex;align-items:center;justify-content:space-between;">
+                                <div>
+                                    <div
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--color-primary-fixed-dim);margin-bottom:4px;">
+                                        Net Surplus</div>
+                                    <div style="font-size:32px;font-weight:900;letter-spacing:-.05em;color:var(--color-primary);"
+                                        id="analytics-net">$0.00</div>
+                                </div>
+                                <button class="btn btn-primary" onclick="window.navigate('entry')">+ New Entry</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown Columns -->
+                    <div class="analytics-breakdown-grid">
+                        <!-- Income Breakdown -->
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">Income Breakdown</div>
+                            </div>
+                            <div id="income-breakdown" style="display:flex;flex-direction:column;gap:8px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <!-- Expense Breakdown -->
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">Expense Details</div>
+                            </div>
+                            <div id="expense-breakdown" style="display:flex;flex-direction:column;gap:8px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ════════════════════════════════
+           PAGE: GOALS
+      ═════════════════════════════════ -->
+                <div class="page" id="page-goals">
+                    <!-- Hero Stats -->
+                    <div class="stats-grid" style="margin-bottom:24px;">
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Daily Tasks</div>
+                                <div class="value" style="font-size:28px;" id="goals-daily-pct">0%</div>
+                            </div>
+                            <div class="ring-wrap">
+                                <svg viewBox="0 0 80 80" style="width:100%;height:100%;transform:rotate(-90deg);">
+                                    <circle cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                    <circle id="ring-daily" cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-secondary)" stroke-dasharray="201" stroke-dashoffset="201"
+                                        stroke-width="6" stroke-linecap="round" />
+                                </svg>
+                                <div class="ring-label" id="ring-daily-label">0/0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Weekly Tasks</div>
+                                <div class="value" style="font-size:28px;" id="goals-weekly-pct">0%</div>
+                            </div>
+                            <div class="ring-wrap">
+                                <svg viewBox="0 0 80 80" style="width:100%;height:100%;transform:rotate(-90deg);">
+                                    <circle cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                    <circle id="ring-weekly" cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-primary)" stroke-dasharray="201" stroke-dashoffset="201"
+                                        stroke-width="6" stroke-linecap="round" />
+                                </svg>
+                                <div class="ring-label" id="ring-weekly-label">0/0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Monthly Tasks</div>
+                                <div class="value" style="font-size:28px;" id="goals-monthly-pct">0%</div>
+                            </div>
+                            <div class="ring-wrap">
+                                <svg viewBox="0 0 80 80" style="width:100%;height:100%;transform:rotate(-90deg);">
+                                    <circle cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                    <circle id="ring-monthly" cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-tertiary)" stroke-dasharray="201" stroke-dashoffset="201"
+                                        stroke-width="6" stroke-linecap="round" />
+                                </svg>
+                                <div class="ring-label" id="ring-monthly-label">0/0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Goals -->
+                    <div class="section-header">
+                        <div class="section-title">Active Strategic Goals</div>
+                        <button class="section-action" onclick="openModal('modal-goal')">+ Add Goal</button>
+                    </div>
+                    <div id="goals-grid"
+                        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px;">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Badges & Streak -->
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">Earned Badges</div>
+                            </div>
+                            <div class="badges-grid" id="badges-grid">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Streak Card -->
+                        <div class="streak-card">
+                            <div
+                                style="position:absolute;right:-16px;bottom:-16px;width:120px;height:120px;background:rgba(170,199,255,0.04);border-radius:50%;filter:blur(32px);">
+                            </div>
+                            <div style="position:relative;z-index:1;">
+                                <div
+                                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size:36px;color:var(--color-primary);font-variation-settings:'FILL' 1;">local_fire_department</span>
+                                    <span class="badge badge-primary" style="font-size:9px;">Active</span>
+                                </div>
+                                <div style="font-size:48px;font-weight:900;letter-spacing:-.05em;color:var(--color-on-surface);"
+                                    id="streak-days">0</div>
+                                <div style="font-size:13px;color:var(--color-on-surface-variant);">Day Streak</div>
+                                <div style="font-size:11px;color:var(--color-on-surface-variant);margin-top:8px;font-style:italic;line-height:1.5;"
+                                    id="streak-message">
+                                    Add tasks and complete them daily to build your streak!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivational Quote -->
+                    <div class="card-glass"
+                        style="margin-top:24px;padding:40px;border-radius:28px;position:relative;overflow:hidden;">
+                        <div
+                            style="position:absolute;top:0;right:0;width:200px;height:200px;background:rgba(170,199,255,0.04);border-radius:50%;filter:blur(60px);">
+                        </div>
+                        <div style="position:relative;z-index:1;max-width:680px;">
+                            <span class="material-symbols-outlined"
+                                style="font-size:48px;color:rgba(170,199,255,0.15);display:block;margin-bottom:12px;">format_quote</span>
+                            <blockquote
+                                style="font-size:22px;font-weight:300;font-style:italic;line-height:1.5;color:var(--color-on-surface);margin-bottom:20px;">
+                                "You do not rise to the level of your goals. You fall to the level of your systems.
+                                Focus on the architecture of your life."
+                            </blockquote>
+                            <div style="display:flex;align-items:center;gap:14px;">
+                                <div style="width:40px;height:3px;background:var(--color-primary);border-radius:2px;">
+                                </div>
+                                <strong style="font-size:16px;letter-spacing:-.02em;">James Clear</strong>
+                                <span style="font-size:12px;color:var(--color-on-surface-variant);">Author of Atomic
+                                    Habits</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ════════════════════════════════
+           PAGE: TASKS (TO-DO)
+      ═════════════════════════════════ -->
+                <div class="page" id="page-tasks">
+                    <!-- Velocity Card -->
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px;">
+                        <div class="card" style="position:relative;overflow:hidden;min-height:120px;">
+                            <div
+                                style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(71,226,102,0.04);border-radius:50%;filter:blur(40px);">
+                            </div>
+                            <div style="position:relative;z-index:1;">
+                                <div
+                                    style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--color-primary-fixed-dim);margin-bottom:4px;">
+                                    Performance Metric</div>
+                                <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Daily Velocity</div>
+                                <div
+                                    style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px;">
+                                    <div style="display:flex;align-items:baseline;gap:2px;">
+                                        <span
+                                            style="font-size:42px;font-weight:900;color:var(--color-secondary);letter-spacing:-.04em;"
+                                            id="velocity-pct">0</span>
+                                        <span
+                                            style="font-size:18px;font-weight:700;color:var(--color-on-surface-variant);">%</span>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <div style="font-size:12px;color:var(--color-on-surface-variant);"
+                                            id="velocity-label">0 of 0 tasks completed</div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar-wrap" style="height:10px;">
+                                    <div class="progress-bar-fill progress-secondary" id="velocity-bar"
+                                        style="width:0%;box-shadow:0 0 12px rgba(71,226,102,0.4);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card"
+                            style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;">
+                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--color-secondary);"
+                                id="today-weekday">—</div>
+                            <div style="font-size:48px;font-weight:900;letter-spacing:-.05em;" id="today-date-display">—
+                            </div>
+                            <button class="btn btn-primary" style="width:100%;justify-content:center;"
+                                onclick="openModal('modal-task')">
+                                <span class="material-symbols-outlined" style="font-size:16px;">add</span>
+                                New Task
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Task Columns -->
+                    <div class="tasks-col-grid">
+                        <!-- Daily -->
+                        <div>
+                            <div class="section-header" style="padding:0 4px;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--color-outline);">
+                                        Daily Tasks</div>
+                                    <span class="badge badge-primary" id="daily-count-badge">0</span>
+                                </div>
+                                <button class="btn-icon-tiny" title="Rollover all Daily tasks"
+                                    onclick="rolloverAll('daily')">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">event_repeat</span>
+                                </button>
+                            </div>
+                            <div id="tasks-daily" style="display:flex;flex-direction:column;gap:8px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Weekly -->
+                        <div>
+                            <div class="section-header" style="padding:0 4px;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--color-outline);">
+                                        Weekly Tasks</div>
+                                    <span class="badge badge-primary" id="weekly-count-badge">0</span>
+                                </div>
+                                <button class="btn-icon-tiny" title="Rollover all Weekly tasks"
+                                    onclick="rolloverAll('weekly')">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">event_repeat</span>
+                                </button>
+                            </div>
+                            <div id="tasks-weekly" style="display:flex;flex-direction:column;gap:8px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Monthly -->
+                        <div>
+                            <div class="section-header" style="padding:0 4px;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div
+                                        style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--color-outline);">
+                                        Monthly Tasks</div>
+                                    <span class="badge badge-primary" id="monthly-count-badge">0</span>
+                                </div>
+                                <button class="btn-icon-tiny" title="Rollover all Monthly tasks"
+                                    onclick="rolloverAll('monthly')">
+                                    <span class="material-symbols-outlined" style="font-size:16px;">event_repeat</span>
+                                </button>
+                            </div>
+                            <div id="tasks-monthly" style="display:flex;flex-direction:column;gap:8px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ════════════════════════════════
+           PAGE: ACHIEVEMENTS
+      ═════════════════════════════════ -->
+                <div class="page" id="page-achievements">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Achievements</div>
+                            <div class="page-subtitle">Your completion dashboard across time periods</div>
+                        </div>
+                    </div>
+
+                    <!-- Achievement Overview Cards -->
+                    <div class="tasks-col-grid" style="margin-bottom:28px;">
+                        <!-- Day -->
+                        <div class="card" style="text-align:center;padding:24px;">
+                            <div
+                                style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--color-secondary);margin-bottom:12px;">
+                                Day</div>
+                            <div class="ring-row-wrap">
+                                <svg style="width:100%;height:100%;transform:rotate(-90deg);" viewBox="0 0 80 80">
+                                    <circle cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                    <circle id="ach-ring-daily" cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-secondary)" stroke-dasharray="201" stroke-dashoffset="201"
+                                        stroke-width="6" stroke-linecap="round" />
+                                </svg>
+                                <div
+                                    style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                    <span
+                                        style="font-size:24px;font-weight:900;letter-spacing:-.04em;color:var(--color-on-surface);"
+                                        id="ach-daily-pct">0%</span>
+                                </div>
+                            </div>
+                            <div style="font-size:14px;font-weight:700;" id="ach-daily-label">0 / 0 done</div>
+                        </div>
+
+                        <!-- Week -->
+                        <div class="card" style="text-align:center;padding:28px;">
+                            <div
+                                style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--color-primary);margin-bottom:16px;">
+                                Week</div>
+                            <div style="position:relative;width:100px;height:100px;margin:0 auto 16px;">
+                                <svg style="width:100%;height:100%;transform:rotate(-90deg);" viewBox="0 0 80 80">
+                                    <circle cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                    <circle id="ach-ring-weekly" cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-primary)" stroke-dasharray="201" stroke-dashoffset="201"
+                                        stroke-width="6" stroke-linecap="round" />
+                                </svg>
+                                <div
+                                    style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                    <span
+                                        style="font-size:24px;font-weight:900;letter-spacing:-.04em;color:var(--color-on-surface);"
+                                        id="ach-weekly-pct">0%</span>
+                                </div>
+                            </div>
+                            <div style="font-size:14px;font-weight:700;" id="ach-weekly-label">0 / 0 done</div>
+                        </div>
+
+                        <!-- Month -->
+                        <div class="card" style="text-align:center;padding:28px;">
+                            <div
+                                style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--color-tertiary);margin-bottom:16px;">
+                                Month</div>
+                            <div style="position:relative;width:100px;height:100px;margin:0 auto 16px;">
+                                <svg style="width:100%;height:100%;transform:rotate(-90deg);" viewBox="0 0 80 80">
+                                    <circle cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-surface-container-highest)" stroke-width="6" />
+                                    <circle id="ach-ring-monthly" cx="40" cy="40" r="32" fill="transparent"
+                                        stroke="var(--color-tertiary)" stroke-dasharray="201" stroke-dashoffset="201"
+                                        stroke-width="6" stroke-linecap="round" />
+                                </svg>
+                                <div
+                                    style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                    <span
+                                        style="font-size:24px;font-weight:900;letter-spacing:-.04em;color:var(--color-on-surface);"
+                                        id="ach-monthly-pct">0%</span>
+                                </div>
+                            </div>
+                            <div style="font-size:14px;font-weight:700;" id="ach-monthly-label">0 / 0 done</div>
+                        </div>
+                    </div>
+
+                    <!-- Task Lists per period -->
+                    <div class="tasks-col-grid" style="margin-bottom:28px;">
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">Daily Tasks</div>
+                            </div>
+                            <div id="ach-daily-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+                        </div>
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">Weekly Tasks</div>
+                            </div>
+                            <div id="ach-weekly-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+                        </div>
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">Monthly Tasks</div>
+                            </div>
+                            <div id="ach-monthly-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Goal Achievement Section -->
+                    <div class="section-header">
+                        <div class="section-title">Goal Achievements</div>
+                    </div>
+                    <div id="ach-goals-list"
+                        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;"></div>
+                </div>
+
+                <!-- ════════════════════════════════
+           PAGE: NEW ENTRY
+      ═════════════════════════════════ -->
+                <div class="page" id="page-entry">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">New Ledger Entry</div>
+                            <div class="page-subtitle">Add income, expenses, tasks, or goals to your private vault.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entry-layout-grid" style="display:grid;grid-template-columns:200px 1fr;gap:20px;">
+                        <!-- Type Selector -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <div class="card">
+                                <div class="form-label" style="margin-bottom:12px;">Entry Type</div>
+                                <div class="type-selector" id="entry-type-selector">
+                                    <div class="type-btn selected-income" data-type="income">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size:18px;color:var(--color-secondary);">add_circle</span>
+                                        New Income
+                                    </div>
+                                    <div class="type-btn" data-type="expense">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size:18px;color:var(--color-tertiary);">do_not_disturb_on</span>
+                                        New Expense
+                                    </div>
+                                    <div class="type-btn" data-type="task">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size:18px;color:var(--color-primary);">task_alt</span>
+                                        New Task
+                                    </div>
+                                    <div class="type-btn" data-type="goal">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size:18px;color:var(--color-primary-fixed-dim);">flag</span>
+                                        New Goal
+                                    </div>
+                                    <div class="type-btn" data-type="credit">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size:18px;color:var(--color-primary);">handshake</span>
+                                        New Credit
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Panel -->
+                        <div class="card" style="position:relative;overflow:hidden;">
+                            <div
+                                style="position:absolute;top:0;right:0;width:200px;height:200px;background:rgba(71,226,102,0.03);filter:blur(60px);pointer-events:none;">
+                            </div>
+                            <div style="position:relative;z-index:1;">
+                                <!-- Income Form -->
+                                <div id="form-income">
+                                    <div style="margin-bottom:20px;">
+                                        <div class="form-label" style="color:var(--color-primary-fixed-dim);">Entry
+                                            Amount</div>
+                                        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+                                            <span
+                                                style="font-size:32px;font-weight:300;color:var(--color-on-surface-variant);">$</span>
+                                            <input class="form-control-amount" type="number" id="income-amount"
+                                                placeholder="0.00" min="0" step="0.01" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row" style="margin-bottom:16px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Income Type</label>
+                                            <select class="form-control" id="income-type">
+                                                <option>Salary &amp; Wages</option>
+                                                <option>Freelance Work</option>
+                                                <option>Investment Return</option>
+                                                <option>Business Income</option>
+                                                <option>Dividends</option>
+                                                <option>Rental Income</option>
+                                                <option>Side Project</option>
+                                                <option>Gift / Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Effective Date</label>
+                                            <input class="form-control" type="date" id="income-date" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:24px;">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" id="income-note" placeholder="Add a description…"
+                                            rows="3"></textarea>
+                                    </div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <button class="btn btn-ghost" type="button"
+                                            onclick="clearEntryForm()">Clear</button>
+                                        <button class="btn btn-primary" type="button" onclick="window.submitIncome()">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">save</span>
+                                            Save Income
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Expense Form -->
+                                <div id="form-expense" style="display:none;">
+                                    <div style="margin-bottom:20px;">
+                                        <div class="form-label" style="color:var(--color-tertiary);">Entry Amount</div>
+                                        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+                                            <span
+                                                style="font-size:32px;font-weight:300;color:var(--color-on-surface-variant);">$</span>
+                                            <input class="form-control-amount" type="number" id="expense-amount"
+                                                placeholder="0.00" min="0" step="0.01" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row" style="margin-bottom:16px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Expense Type</label>
+                                            <select class="form-control" id="expense-type">
+                                                <option>Rent &amp; Mortgage</option>
+                                                <option>Food &amp; Dining</option>
+                                                <option>Transportation</option>
+                                                <option>Utilities &amp; Bills</option>
+                                                <option>Healthcare</option>
+                                                <option>Entertainment</option>
+                                                <option>Shopping</option>
+                                                <option>Subscriptions</option>
+                                                <option>Travel</option>
+                                                <option>Education</option>
+                                                <option>Personal Care</option>
+                                                <option>Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Effective Date</label>
+                                            <input class="form-control" type="date" id="expense-date" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:24px;">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" id="expense-note"
+                                            placeholder="Add a description…" rows="3"></textarea>
+                                    </div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <button class="btn btn-ghost" type="button"
+                                            onclick="clearEntryForm()">Clear</button>
+                                        <button class="btn btn-primary" type="button"
+                                            style="background:linear-gradient(135deg,var(--color-tertiary-container),#ff5447);"
+                                            onclick="window.submitExpense()">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">save</span>
+                                            Save Expense
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Task Form -->
+                                <div id="form-task" style="display:none;">
+                                    <div class="form-group" style="margin-bottom:16px;">
+                                        <label class="form-label">Task Title</label>
+                                        <input class="form-control" type="text" id="task-title"
+                                            placeholder="Enter task…" />
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:16px;">
+                                        <label class="form-label">Period</label>
+                                        <select class="form-control" id="task-period">
+                                            <option value="daily">Daily — Today's task</option>
+                                            <option value="weekly">Weekly — This week's task</option>
+                                            <option value="monthly">Monthly — This month's task</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:24px;">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" id="task-note" placeholder="Add details…"
+                                            rows="3"></textarea>
+                                    </div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <button class="btn btn-ghost" type="button"
+                                            onclick="clearEntryForm()">Clear</button>
+                                        <button class="btn btn-primary" type="button" onclick="window.submitTask()">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">save</span>
+                                            Save Task
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Goal Form -->
+                                <div id="form-goal" style="display:none;">
+                                    <div class="form-group" style="margin-bottom:16px;">
+                                        <label class="form-label">Goal Title</label>
+                                        <input class="form-control" type="text" id="goal-title"
+                                            placeholder="e.g. Save $1000, Run 5km…" />
+                                    </div>
+                                    <div class="form-row" style="margin-bottom:16px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Target Value</label>
+                                            <input class="form-control" type="number" id="goal-target" placeholder="100"
+                                                min="1" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Unit</label>
+                                            <input class="form-control" type="text" id="goal-unit"
+                                                placeholder="%, $, km, sessions…" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row" style="margin-bottom:16px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Current Progress</label>
+                                            <input class="form-control" type="number" id="goal-current" placeholder="0"
+                                                min="0" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Target Date</label>
+                                            <input class="form-control" type="date" id="goal-target-date" />
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <button class="btn btn-ghost" type="button"
+                                            onclick="clearEntryForm()">Clear</button>
+                                        <button class="btn btn-primary" type="button" onclick="window.submitGoal()">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">save</span>
+                                            Save Goal
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Credit Form -->
+                                <div id="form-credit" style="display:none;">
+                                    <div style="margin-bottom:20px;">
+                                        <div class="form-label" style="color:var(--color-primary);">Credit Amount</div>
+                                        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+                                            <span
+                                                style="font-size:32px;font-weight:300;color:var(--color-on-surface-variant);">$</span>
+                                            <input class="form-control-amount" type="number" id="credit-amount"
+                                                placeholder="0.00" min="0" step="0.01" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row" style="margin-bottom:16px;">
+                                        <div class="form-group">
+                                            <label class="form-label">Type</label>
+                                            <select class="form-control" id="credit-type">
+                                                <option value="lent">Lent Out — I gave money</option>
+                                                <option value="borrowed">Borrowed — I took money</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Person / Party</label>
+                                            <input class="form-control" type="text" id="credit-person"
+                                                placeholder="Who?" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:16px;">
+                                        <label class="form-label">Effective Date</label>
+                                        <input class="form-control" type="date" id="credit-date" />
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:24px;">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" id="credit-note"
+                                            placeholder="Add terms or details…" rows="3"></textarea>
+                                    </div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <button class="btn btn-ghost" type="button"
+                                            onclick="clearEntryForm()">Clear</button>
+                                        <button class="btn btn-primary" type="button"
+                                            onclick="window.submitCredit('entry')">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">save</span>
+                                            Save Record
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ════════════════════════════════
+           PAGE: CREDITS
+      ═════════════════════════════════ -->
+                <div class="page" id="page-credits">
+                    <div class="page-header">
+                        <div>
+                            <div
+                                style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--color-primary-fixed-dim);margin-bottom:4px;">
+                                Money Tracker</div>
+                            <div class="page-title">Credits &amp; Debts</div>
+                            <div class="page-subtitle">Track money you've lent or borrowed.</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('modal-credit')">
+                            <span class="material-symbols-outlined" style="font-size:16px;">add</span>
+                            Add Record
+                        </button>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="stats-grid credits-summary-grid" style="margin-bottom:24px;">
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Total Lent Out</div>
+                                <div class="value" style="font-size:22px;color:var(--color-secondary);"
+                                    id="credit-lent-total">$0.00</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(71,226,102,0.3);">arrow_upward</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Total Borrowed</div>
+                                <div class="value" style="font-size:22px;color:var(--color-tertiary);"
+                                    id="credit-borrowed-total">$0.00</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(255,84,71,0.3);">arrow_downward</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Outstanding Lent</div>
+                                <div class="value" style="font-size:22px;" id="credit-outstanding-lent">$0.00</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(170,199,255,0.3);">schedule</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-info">
+                                <div class="label">Outstanding Borrowed</div>
+                                <div class="value" style="font-size:22px;" id="credit-outstanding-borrowed">$0.00</div>
+                            </div>
+                            <span class="material-symbols-outlined"
+                                style="font-size:32px;color:rgba(255,200,71,0.3);">warning</span>
+                        </div>
+                    </div>
+
+                    <!-- Credits List -->
+                    <div class="section-header">
+                        <div class="section-title">Credit Ledger</div>
+                        <div style="display:flex;gap:8px;">
+                            <button id="credit-filter-all" class="period-btn active" onclick="setCreditFilter('all')"
+                                style="font-size:11px;padding:5px 12px;">All</button>
+                            <button id="credit-filter-lent" class="period-btn" onclick="setCreditFilter('lent')"
+                                style="font-size:11px;padding:5px 12px;">Lent</button>
+                            <button id="credit-filter-borrowed" class="period-btn" onclick="setCreditFilter('borrowed')"
+                                style="font-size:11px;padding:5px 12px;">Borrowed</button>
+                            <button id="credit-filter-pending" class="period-btn" onclick="setCreditFilter('pending')"
+                                style="font-size:11px;padding:5px 12px;">Pending</button>
+                        </div>
+                    </div>
+                    <div id="credits-list" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div><!-- end content-area -->
+        </div><!-- end main-area -->
+    </div><!-- end app-shell -->
+
+    <!-- FAB -->
+    <button class="fab" id="main-fab" title="New Entry" onclick="window.navigate('entry')">
+        <span class="material-symbols-outlined">add</span>
+    </button>
+
+    <!-- ═══════════════════════════════════════
+     MODALS
+═════════════════════════════════════════ -->
+
+    <!-- Add Goal Modal -->
+    <div class="overlay" id="modal-goal" onclick="handleOverlayClick(event,'modal-goal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">New Goal</div>
+                <button class="modal-close" onclick="closeModal('modal-goal')">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="form-group">
+                    <label class="form-label">Goal Title</label>
+                    <input class="form-control" type="text" id="modal-goal-title" placeholder="e.g. Save $1000" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Target Value</label>
+                        <input class="form-control" type="number" id="modal-goal-target" placeholder="100" min="1" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit</label>
+                        <input class="form-control" type="text" id="modal-goal-unit" placeholder="%, $, km…" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Current Progress</label>
+                        <input class="form-control" type="number" id="modal-goal-current" placeholder="0" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Date</label>
+                        <input class="form-control" type="date" id="modal-goal-date" />
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn btn-ghost" onclick="closeModal('modal-goal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="window.submitModalGoal()">
+                        <span class="material-symbols-outlined" style="font-size:16px;">flag</span>
+                        Save Goal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="overlay" id="modal-task" onclick="handleOverlayClick(event,'modal-task')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">New Task</div>
+                <button class="modal-close" onclick="closeModal('modal-task')">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="form-group">
+                    <label class="form-label">Task Title</label>
+                    <input class="form-control" type="text" id="modal-task-title" placeholder="Enter task title…" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Period</label>
+                    <select class="form-control" id="modal-task-period">
+                        <option value="daily">Daily — Today's task</option>
+                        <option value="weekly">Weekly — This week's task</option>
+                        <option value="monthly">Monthly — This month's task</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control" id="modal-task-note" placeholder="Add details…" rows="2"></textarea>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn btn-ghost" onclick="closeModal('modal-task')">Cancel</button>
+                    <button class="btn btn-primary" onclick="window.submitModalTask()">
+                        <span class="material-symbols-outlined" style="font-size:16px;">task_alt</span>
+                        Save Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Goal Progress Modal -->
+    <div class="overlay" id="modal-goal-progress" onclick="handleOverlayClick(event,'modal-goal-progress')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">Update Progress</div>
+                <button class="modal-close" onclick="closeModal('modal-goal-progress')">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div id="goal-progress-info" style="font-size:13px;color:var(--color-on-surface-variant);"></div>
+                <div class="form-group">
+                    <label class="form-label">Current Value</label>
+                    <input class="form-control" type="number" id="modal-progress-value" placeholder="0" min="0" />
+                </div>
+                <input type="hidden" id="modal-progress-goal-id" />
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn btn-ghost" onclick="closeModal('modal-goal-progress')">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveGoalProgress()">
+                        <span class="material-symbols-outlined" style="font-size:16px;">save</span>
+                        Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Credit Modal -->
+    <div class="overlay" id="modal-credit" onclick="handleOverlayClick(event,'modal-credit')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">New Credit Record</div>
+                <button class="modal-close" onclick="closeModal('modal-credit')">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select class="form-control" id="modal-credit-type">
+                            <option value="lent">Lent — I gave money</option>
+                            <option value="borrowed">Borrowed — I owe money</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input class="form-control" type="number" id="modal-credit-amount" placeholder="0.00" min="0"
+                            step="0.01" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Person / Party</label>
+                    <input class="form-control" type="text" id="modal-credit-person"
+                        placeholder="Name of person or organization" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input class="form-control" type="date" id="modal-credit-date" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control" id="modal-credit-note" placeholder="Reason, terms, due date…"
+                        rows="2"></textarea>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn btn-ghost" onclick="closeModal('modal-credit')">Cancel</button>
+                    <button class="btn btn-primary" onclick="window.submitCredit()">
+                        <span class="material-symbols-outlined" style="font-size:16px;">handshake</span>
+                        Save Record
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MOBILE BOTTOM NAV ─── -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-item active" onclick="window.navigate('finance')" id="mob-finance">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+            <span>Home</span>
+        </div>
+        <div class="mobile-nav-item" onclick="window.navigate('analytics')" id="mob-analytics">
+            <span class="material-symbols-outlined">insights</span>
+            <span>Stats</span>
+        </div>
+        <div class="mobile-nav-item" onclick="window.navigate('credits')" id="mob-credits">
+            <span class="material-symbols-outlined">handshake</span>
+            <span>Credits</span>
+        </div>
+        <div class="mobile-nav-item" onclick="window.navigate('entry')" id="mob-entry">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span>New</span>
+        </div>
+        <div class="mobile-nav-item" onclick="doLogout()">
+            <span class="material-symbols-outlined">logout</span>
+            <span>Exit</span>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script type="module" src="app.js"></script>
+    <script type="module">
+        import { auth } from './auth.js';
+        import { store } from './store.js';
+
+        function applyUser() {
+            const user = auth.currentUser();
+            if (!user) return;
+            const avatarEl = document.getElementById('user-avatar');
+            const nameEl = document.getElementById('user-name');
+            const roleEl = document.getElementById('user-role');
+            if (avatarEl) avatarEl.textContent = user.avatar || '?';
+            if (nameEl) nameEl.textContent = user.firstName + ' ' + user.lastName;
+            if (roleEl) roleEl.textContent = user.occupation || 'Premium Member';
+            // Update page title with user's name
+            document.title = `STASH — ${user.firstName}'s Vault`;
+        }
+
+        window.doLogout = function () {
+            auth.logout();
+            window.location.replace('login.html');
+        };
+
+        applyUser();
+    </script>
+</body>
+
+</html>

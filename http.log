@@ -1,0 +1,21 @@
+127.0.0.1 - - [02/Apr/2026 21:29:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 21:29:55] code 404, message File not found
+127.0.0.1 - - [02/Apr/2026 21:29:55] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [02/Apr/2026 21:30:04] "GET /login.html HTTP/1.1" 304 -
+127.0.0.1 - - [02/Apr/2026 21:32:51] code 404, message File not found
+127.0.0.1 - - [02/Apr/2026 21:32:51] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+127.0.0.1 - - [02/Apr/2026 21:55:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 21:55:46] "GET /auth.js HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 21:55:46] "GET /login.html HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 21:55:47] code 404, message File not found
+127.0.0.1 - - [02/Apr/2026 21:55:47] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [02/Apr/2026 22:05:18] "GET /finance.html HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 22:05:18] "GET /styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 22:05:18] "GET /app.js HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 22:05:18] "GET /store.js HTTP/1.1" 200 -
+127.0.0.1 - - [02/Apr/2026 22:21:58] "GET /login.html HTTP/1.1" 304 -
+127.0.0.1 - - [03/Apr/2026 09:31:49] "GET /finance.html HTTP/1.1" 304 -
+127.0.0.1 - - [03/Apr/2026 09:31:49] "GET /styles.css HTTP/1.1" 304 -
+127.0.0.1 - - [03/Apr/2026 09:31:49] "GET /app.js HTTP/1.1" 304 -
+127.0.0.1 - - [03/Apr/2026 09:31:49] "GET /auth.js HTTP/1.1" 304 -
+127.0.0.1 - - [03/Apr/2026 09:31:49] "GET /store.js HTTP/1.1" 304 -
