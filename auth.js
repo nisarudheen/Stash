@@ -49,7 +49,30 @@ export const auth = {
         return !!this.getToken();
     },
 
+    /**
+     * Sends a no-cors ping to detect if the backend is up at all.
+     * Returns 'up' | 'suspended' | 'starting'
+     */
+    async _checkServerStatus() {
+        try {
+            // no-cors lets us send the request without a preflight.
+            // We can't read the response body, but we CAN detect if we got
+            // a real HTTP response (opaque) vs a network error (server down).
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 8000);
+            await fetch(`${API_BASE}/health`, { mode: 'no-cors', signal: ctrl.signal });
+            clearTimeout(timer);
+            return 'up'; // Got an opaque response — server is running
+        } catch {
+            return 'suspended'; // Network error — server is completely down / suspended
+        }
+    },
+
     async register({ firstName, lastName, email, password, currency, occupation }) {
+        const status = await this._checkServerStatus();
+        if (status === 'suspended') {
+            return { ok: false, error: 'The backend server is currently offline. Please start the service at dashboard.render.com and try again.' };
+        }
         try {
             const res = await fetchWithRetry(`${API_BASE}/auth/register`, {
                 method: 'POST',
@@ -66,6 +89,10 @@ export const auth = {
     },
 
     async login({ email, password }) {
+        const status = await this._checkServerStatus();
+        if (status === 'suspended') {
+            return { ok: false, error: 'The backend server is currently offline. Please start the service at dashboard.render.com and try again.' };
+        }
         try {
             const res = await fetchWithRetry(`${API_BASE}/auth/login`, {
                 method: 'POST',
