@@ -7,6 +7,11 @@
     <title>STASH — Personal Finance & Productivity</title>
     <meta name="description"
         content="A private vault for tracking income, expenses, goals, and tasks with beautiful dashboards." />
+    <!-- ─── API Config (update this URL after deploying to Render.com) ─── -->
+    <script>
+        // Replace this with your actual Render.com backend URL:
+        window.STASH_API_URL = 'https://stash-api-backend.onrender.com/api';
+    </script>
     <!-- Auth guard: runs before render -->
     <script type="module">
         import { auth } from './auth.js';

@@ -5,7 +5,9 @@
 
 import { auth } from './auth.js';
 
-const API_BASE = 'http://localhost:3000/api';
+// ─── Set in finance.html / login.html via window.STASH_API_URL ───────────────
+const API_BASE = window.STASH_API_URL || '/api';
+// ─────────────────────────────────────────────────────────────────────────────
 
 /* ─── Task Helpers ─── */
 export function getWeekLabel(date) {

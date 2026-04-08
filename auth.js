@@ -1,9 +1,14 @@
 /**
- * THE OBSIDIAN LEDGER — Auth Module (API version)
- * Communicates with Node.js backend.
+ * THE OBSIDIAN LEDGER — Auth Module
+ * Communicates with deployed backend.
  */
 
-const API_BASE = 'http://localhost:3000/api';
+// ─── CHANGE THIS TO YOUR RENDER URL ONCE DEPLOYED ───────────────────────────
+// Example: 'https://stash-api.onrender.com/api'
+// Leave as '/api' if serving from same origin (local dev with server.js)
+const API_BASE = window.STASH_API_URL || '/api';
+// ─────────────────────────────────────────────────────────────────────────────
+
 const TOKEN_KEY = 'obsidian_token';
 const USER_KEY = 'obsidian_user';
 
@@ -60,7 +65,6 @@ export const auth = {
     logout() {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
-        // Also clear the data key from old localStorage version to be clean
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
