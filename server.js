@@ -369,13 +369,22 @@ app.delete('/api/credits/:id', authenticateToken, async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ─── START ─── */
+/* ─── START — Express first, then MongoDB ─── */
+
+// Start the HTTP server immediately so CORS headers always work
+// even if MongoDB hasn't connected yet.
+app.listen(PORT, () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
+
+// Connect MongoDB in background — routes will 503 until ready
 mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('✅ MongoDB connected');
-        app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
     })
     .catch(err => {
-        console.error('❌ MongoDB connection failed:', err);
-        process.exit(1);
+        console.error('❌ MongoDB connection failed:', err.message);
+        // Don't exit — keep server alive so CORS preflight still works
+        // and callers get a real JSON error instead of a network failure
     });
+
